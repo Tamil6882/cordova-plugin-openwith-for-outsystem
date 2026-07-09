@@ -1,0 +1,62 @@
+{
+  "name": "cordova-plugin-openwith",
+  "version": "1.0.3",
+  "description": "Cordova \"Open With\" plugin for iOS and Android",
+  "cordova": {
+    "id": "cordova-plugin-openwith",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/missive/cordova-plugin-openwith.git"
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-ios",
+    "cordova",
+    "phonegap",
+    "openwith",
+    "ios",
+    "android"
+  ],
+  "scripts": {
+    "test": "npm run js-lint && npm run js-test && npm run java-lint",
+    "install-dev": "./install-pmd",
+    "java-lint": "pmd -minimumpriority 4 -d src/android -R java-basic,java-android,java-braces,java-codesize,java-empty,java-finalizers,java-imports,java-naming,java-optimizations,java-strictexception,java-strings,java-sunsecure,java-typeresolution,java-unnecessary,java-unusedcode -f textcolor",
+    "objc-lint": "true",
+    "js-lint": "eslint www",
+    "js-test": "mocha www",
+    "js-lint-watch": "esw --watch www",
+    "js-test-watch": "mocha --watch www"
+  },
+  "author": "Jean-Christophe Hoelt <hoelt@fovea.cc>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/missive/cordova-plugin-openwith/issues"
+  },
+  "homepage": "https://github.com/missive/cordova-plugin-openwith",
+  "# Dependencies required by the hooks": "",
+  "dependencies": {
+    "file-system": "^2.2.2",
+    "path": "^0.12.7",
+    "plist": "^2.1.0",
+    "xcode": "2.0.0"
+  },
+  "# Dependencies required to run tests": "",
+  "devDependencies": {
+    "eslint": "^4.7.2",
+    "eslint-config-google": "^0.9.1",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-mocha": "^4.11.0",
+    "eslint-plugin-node": "^5.1.1",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "eslint-watch": "^3.1.2",
+    "expect.js": "^0.3.1",
+    "mocha": "^3.5.3"
+  }
+}

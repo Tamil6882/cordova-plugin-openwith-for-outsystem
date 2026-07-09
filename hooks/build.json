@@ -1,0 +1,32 @@
+{
+  "ios": {
+    "release": {
+      "codeSignIdentity": "iPhone Distribution",
+      "provisioningProfile": "$PROVISIONINGPROFILE",
+      "packageType": "IPA",
+      "developmentTeam": "$TEAM_ID"
+    },
+    "debug": {
+      "codeSignIdentity": "iPhone Developer",
+      "provisioningProfile": "$PROVISIONINGPROFILE",
+      "developmentTeam": "$TEAM_ID"
+    },
+    "buildSettings": {
+      "LD_RUNPATH_SEARCH_PATHS": "$(inherited)",
+      "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES": "NO",
+      "CODE_SIGN_IDENTITY": "iPhone Developer",
+      "CODE_SIGN_STYLE": "Automatic"
+    },
+    "entitlements": {
+      "com.apple.security.application-groups": [
+        "$APPGROUP",
+        "$SHAREAPPGROUP"
+      ],
+      "aps-environment": "$APS_ENVIRONMENT",
+      "com.apple.developer.associated-domains": [],
+      "keychain-access-groups": [
+        "$(AppIdentifierPrefix)$BUNDLEID"
+      ]
+    }
+  }
+}
