@@ -111,7 +111,6 @@ SOFTWARE.
          which fired exactly once in that log) fixes this at the root,
          instead of only relying on the hasFile() guards as a backstop. -->
     <hook type="after_plugin_install" src="hooks/iosAddTarget.js" />
-    <platform name="ios">
     <hook type="before_build" src="hooks/apply_build_json.js" />
     </platform>
     <!-- Dependencies -->
