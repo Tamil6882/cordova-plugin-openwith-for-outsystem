@@ -105,12 +105,9 @@ module.exports = function(context) {
     }
 
     // Add files which are not part of any build phase (config)
-    // NOTE: guarded with hasFile() so re-running this hook (e.g. because a
-    // future Cordova/MABS version reintroduces an extra trigger, or plugman
-    // retries an install) never appends duplicate PBXFileReference /
-    // PBXBuildFile / group-children entries for the same physical file.
-    // Unbounded duplication of these objects is what eventually produces
-    // "Expected ... but "," found" when some later step re-parses the file.
+    // Guarded with hasFile() so re-running this hook never appends duplicate
+    // PBXFileReference / PBXBuildFile / group-children entries for the same
+    // physical file.
     files.config.forEach(function (file) {
       if (!pbxProject.hasFile(file.name)) {
         pbxProject.addFile(file.name, pbxGroupKey);
@@ -131,48 +128,62 @@ module.exports = function(context) {
       }
     });
 
-    // Add build settings for Swift support, bridging header and xcconfig files
-    var configurations = pbxProject.pbxXCBuildConfigurationSection();
-    for (var key in configurations) {
-      if (typeof configurations[key].buildSettings !== 'undefined') {
-        var buildSettingsObj = configurations[key].buildSettings;
-        if (typeof buildSettingsObj['PRODUCT_NAME'] !== 'undefined') {
-          var productName = buildSettingsObj['PRODUCT_NAME'];
-          if (productName.indexOf('ShareExt') >= 0) {
-            buildSettingsObj['CODE_SIGN_ENTITLEMENTS'] = '"ShareExtension/ShareExtension.entitlements"';
-          }
-        }
-      }
-    }
-
-    // Write the modified project back to disc.
+    // ---------------------------------------------------------------------
+    // FIX #1: CODE_SIGN_ENTITLEMENTS quoting
     //
-    // IMPORTANT: when context.opts.cordova.project exists, pbxProject is the
-    // SAME in-memory object Cordova itself caches for the whole plugin
-    // install pipeline (see cordova-ios/lib/projectFile.js -
-    // cachedProjectFiles). Cordova owns writing/purging that object on its
-    // own schedule as later plugins are installed. Writing to disk here too
-    // creates a race between this hook's write and Cordova's own write of
-    // the same evolving in-memory tree, which can leave the file on disk in
-    // a state that doesn't match what Cordova still thinks is cached -
-    // surfacing as a parse failure several plugins later rather than here.
+    // The previous version did:
+    //   buildSettingsObj['CODE_SIGN_ENTITLEMENTS'] = '"ShareExtension/ShareExtension.entitlements"';
+    // i.e. it embedded literal double-quote characters INSIDE the JS string
+    // value itself. The `xcode` module's own serializer already decides
+    // whether a build-setting value needs quoting when it writes the file
+    // (values containing "/" do get quoted automatically). Pre-quoting the
+    // value ourselves means the on-disk value can end up double-quoted, or
+    // quoted in a way that a later full re-parse (triggered by installing
+    // another plugin) can't tokenize correctly - producing exactly the
+    // "Expected ... but "," found" PEG parser error seen several plugins
+    // later.
     //
-    // So: only write directly when we parsed the project ourselves
-    // (standalone path, e.g. when running outside cordova-ios's Api). When
-    // using Cordova's shared project, just mark it dirty and let Cordova
-    // persist it through its normal lifecycle.
-    if (context.opts.cordova.project) {
-      if (typeof context.opts.cordova.project.write === 'function') {
-        context.opts.cordova.project.write();
-      }
-    } else {
-      fs.writeFileSync(pbxProjectPath, pbxProject.writeSync());
-    }
+    // Fix: assign the RAW value (no manual quotes) and go through the
+    // xcode module's own updateBuildProperty API instead of mutating the
+    // parsed buildSettings object directly. This keeps quoting/escaping
+    // consistent with whatever version of `xcode` is doing the writing,
+    // instead of us guessing at its on-disk format.
+    // ---------------------------------------------------------------------
+    pbxProject.updateBuildProperty(
+      'CODE_SIGN_ENTITLEMENTS',
+      'ShareExtension/ShareExtension.entitlements',
+      null,
+      'ShareExt'
+    );
 
-    // Fail fast: immediately re-parse what's now on disk. If our own edits
-    // are what corrupt the project, this throws right here (with a clear
-    // origin) instead of silently succeeding and blowing up two plugins
-    // later inside es6-promise-plugin's install.
+    // ---------------------------------------------------------------------
+    // FIX #2: deterministic write + verify
+    //
+    // Previously, when running inside Cordova's own plugin-install pipeline
+    // (context.opts.cordova.project set), this hook called
+    // context.opts.cordova.project.write() and relied on Cordova's own
+    // scheduling to eventually flush bytes to disk - then immediately
+    // re-parsed pbxProjectPath from disk to "verify" the write succeeded.
+    // If Cordova's write() does not flush synchronously, that verify step
+    // can read stale/partial content and pass even when the in-memory tree
+    // (which Cordova will still write out later, on its own schedule) is
+    // actually corrupted - producing a false "all good" here and a real
+    // failure several plugins later.
+    //
+    // Fix: write the CURRENT in-memory state (pbxProject is the same object
+    // Cordova has cached either way - see parsePbxProject above) to disk
+    // ourselves, synchronously, right now, using pbxProject.writeSync().
+    // This is idempotent: if Cordova later writes the same cached object
+    // again from its own lifecycle, it will serialize the same content we
+    // just wrote, so there's no conflicting write. This removes the
+    // write-timing ambiguity instead of just working around it.
+    // ---------------------------------------------------------------------
+    fs.writeFileSync(pbxProjectPath, pbxProject.writeSync());
+
+    // Fail fast: immediately re-parse what's now on disk, using a fresh
+    // xcode.project instance (not the cached/shared one) so this is a true
+    // independent check of what we just wrote - not a check that could
+    // silently reuse in-memory state.
     try {
       var verify = require('xcode').project(pbxProjectPath);
       verify.parseSync();
