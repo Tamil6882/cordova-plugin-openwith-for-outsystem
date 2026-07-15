@@ -157,6 +157,64 @@ module.exports = function(context) {
     );
 
     // ---------------------------------------------------------------------
+    // FIX #3: explicit INFOPLIST_FILE on the ShareExt target itself
+    //
+    // cordova-ios's own Api.addPlugin -> parseProjectFile() locates the
+    // main app's Info.plist by scanning EVERY XCBuildConfiguration in the
+    // whole pbxproj for the first one with an INFOPLIST_FILE setting - it
+    // is not scoped to the main app target. This is a known cordova-ios
+    // limitation that surfaces whenever a second target (like our ShareExt
+    // extension) exists: if that scan happens to land on the extension
+    // target's config first, and that config's INFOPLIST_FILE doesn't
+    // resolve to a real file on disk, cordova-ios throws:
+    //   "Could not find *-Info.plist file, or config.xml file."
+    // on the very next plugin install that touches the project.
+    //
+    // addTarget() does not reliably give the new target a resolvable
+    // INFOPLIST_FILE on its own, and updateBuildProperty()'s target-name
+    // scoping (used above for CODE_SIGN_ENTITLEMENTS) is not consistently
+    // honored across versions of the `xcode` module - in some versions it
+    // silently falls back to updating build settings project-wide instead
+    // of just the named target.
+    //
+    // Fix: locate ShareExt's own XCConfigurationList directly via its
+    // PBXNativeTarget record, then set INFOPLIST_FILE on each of ITS
+    // XCBuildConfiguration entries specifically, pointing at the actual
+    // plist file we copy into the ShareExtension folder. This guarantees
+    // whichever target's config cordova-ios's scan lands on first, the
+    // path it finds resolves to a real file.
+    // ---------------------------------------------------------------------
+    var shareExtPlist = files.config.filter(function (file) {
+      return file.extension === '.plist';
+    })[0];
+
+    if (!shareExtPlist) {
+      throw redError('No .plist file found among ShareExtension files; ' +
+        'cannot set INFOPLIST_FILE for the ShareExt target. Check that ' +
+        'the ShareExtension folder contains an Info.plist-type file.');
+    }
+
+    var shareExtConfigListUuid = target.pbxNativeTarget.buildConfigurationList;
+    var configLists = pbxProject.pbxXCConfigurationList();
+    var shareExtConfigList = configLists[shareExtConfigListUuid];
+
+    if (!shareExtConfigList) {
+      throw redError('Could not locate XCConfigurationList for the ' +
+        'ShareExt target (uuid ' + shareExtConfigListUuid + '); cannot ' +
+        'set INFOPLIST_FILE.');
+    }
+
+    var buildConfigSection = pbxProject.pbxXCBuildConfigurationSection();
+    shareExtConfigList.buildConfigurations.forEach(function (confRef) {
+      var conf = buildConfigSection[confRef.value];
+      if (conf && conf.buildSettings) {
+        // No manually embedded quotes here either - same reasoning as
+        // FIX #1: let the xcode module's own writer decide on quoting.
+        conf.buildSettings['INFOPLIST_FILE'] = 'ShareExtension/' + shareExtPlist.name;
+      }
+    });
+
+    // ---------------------------------------------------------------------
     // FIX #2: deterministic write + verify
     //
     // Previously, when running inside Cordova's own plugin-install pipeline
