@@ -112,7 +112,6 @@ SOFTWARE.
          instead of only relying on the hasFile() guards as a backstop. -->
     <hook type="after_plugin_install" src="hooks/iosAddTarget.js" />
     <hook type="before_build" src="hooks/apply_build_json.js" />
-    </platform>
     <!-- Dependencies -->
     <framework src="MobileCoreServices.framework" />
   </platform>
