@@ -3,11 +3,11 @@
     "release": {
       "codeSignIdentity": "iPhone Distribution",
       "packageType": "IPA",
-      "developmentTeam": "QK8X9GLMJ2"
+      "developmentTeam": "$TEAM_ID"
     },
     "debug": {
       "codeSignIdentity": "iPhone Developer",
-      "developmentTeam": "QK8X9GLMJ2"
+      "developmentTeam": "$TEAM_ID"
     },
     "buildSettings": {
       "LD_RUNPATH_SEARCH_PATHS": "$(inherited)",
@@ -17,7 +17,7 @@
     },
     "entitlements": {
       "com.apple.security.application-groups": [
-        "group.$(CFBundleIdentifier).shareextension"
+        "$SHAREAPPGROUP"
       ],
       "aps-environment": "development",
       "com.apple.developer.associated-domains": [],
