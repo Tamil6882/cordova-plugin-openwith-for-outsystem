@@ -25,7 +25,7 @@
       "aps-environment": "developmen",
       "com.apple.developer.associated-domains": [],
       "keychain-access-groups": [
-        "QK8X9GLMJ2.com.minelab.realm-of-minelab"
+        "$(AppIdentifierPrefix)com.minelab.realm-of-minelab"
       ]
     }
   }
