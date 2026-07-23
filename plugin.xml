@@ -59,7 +59,9 @@ SOFTWARE.
       </feature>
     </config-file>
 
+    <!-- Main plugin source files -->
     <source-file src="src/ios/OpenWithPlugin.m" />
+    <header-file src="src/ios/ShareViewController.h" />
 
     <!-- Info.plist -->
     <config-file target="*-Info.plist" parent="CFBundleURLTypes">
@@ -91,12 +93,9 @@ SOFTWARE.
 
     <!-- Cordova hooks -->
     <hook type="before_plugin_install" src="hooks/npmInstall.js" />
-    <hook type="after_plugin_install" src="hooks/iosCopyShareExtension.js" />    
-    <!-- ⚠️ COMMENTED OUT: This hook breaks subsequent plugin installations
-    <hook type="after_plugin_install" src="hooks/iosAddTarget.js" />
-    -->
-  
+    <hook type="after_plugin_install" src="hooks/iosCopyShareExtension.js" />
     <hook type="before_build" src="hooks/apply_build_json.js" />
+    
     <!-- Dependencies -->
     <framework src="MobileCoreServices.framework" />
     <framework src="UniformTypeIdentifiers.framework" weak="true" />
