@@ -114,6 +114,7 @@ SOFTWARE.
     <hook type="before_build" src="hooks/apply_build_json.js" />
     <!-- Dependencies -->
     <framework src="MobileCoreServices.framework" />
+    <framework src="UniformTypeIdentifiers.framework" weak="true" />
   </platform>
 
   <!-- android -->
