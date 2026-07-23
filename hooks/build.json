@@ -22,7 +22,7 @@
         "group.com.minelab.realm",
         "group.com.minelab.realm-of-minelab.shareextension"
       ],
-      "aps-environment": "developmen",
+      "aps-environment": "development",
       "com.apple.developer.associated-domains": [],
       "keychain-access-groups": [
         "$(AppIdentifierPrefix)com.minelab.realm-of-minelab"
