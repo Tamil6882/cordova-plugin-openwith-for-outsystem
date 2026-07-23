@@ -2,13 +2,11 @@
   "ios": {
     "release": {
       "codeSignIdentity": "iPhone Distribution",
-      "provisioningProfile": "ROM-New-PP-DEV",
       "packageType": "IPA",
       "developmentTeam": "QK8X9GLMJ2"
     },
     "debug": {
       "codeSignIdentity": "iPhone Developer",
-      "provisioningProfile": "ROM-New-PP-DEV",
       "developmentTeam": "QK8X9GLMJ2"
     },
     "buildSettings": {
@@ -19,15 +17,13 @@
     },
     "entitlements": {
       "com.apple.security.application-groups": [
-        "group.com.minelab.realm",
-        "group.com.minelab.realm-of-minelab.shareextension"
+        "group.$(CFBundleIdentifier).shareextension"
       ],
       "aps-environment": "development",
       "com.apple.developer.associated-domains": [],
       "keychain-access-groups": [
-        "$(AppIdentifierPrefix)com.minelab.realm-of-minelab"
+        "$(AppIdentifierPrefix)$(CFBundleIdentifier)"
       ]
     }
   }
 }
-
