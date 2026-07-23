@@ -25,7 +25,7 @@
       "aps-environment": "$APS_ENVIRONMENT",
       "com.apple.developer.associated-domains": [],
       "keychain-access-groups": [
-        "$(AppIdentifierPrefix)$BUNDLEID"
+        "$KEYCHAIN_ACCESSGROUP"
       ]
     }
   }
