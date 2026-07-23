@@ -2,14 +2,14 @@
   "ios": {
     "release": {
       "codeSignIdentity": "iPhone Distribution",
-      "provisioningProfile": "$PROVISIONINGPROFILE",
+      "provisioningProfile": "ROM-New-PP-DEV",
       "packageType": "IPA",
-      "developmentTeam": "$TEAM_ID"
+      "developmentTeam": "QK8X9GLMJ2"
     },
     "debug": {
       "codeSignIdentity": "iPhone Developer",
-      "provisioningProfile": "$PROVISIONINGPROFILE",
-      "developmentTeam": "$TEAM_ID"
+      "provisioningProfile": "ROM-New-PP-DEV",
+      "developmentTeam": "QK8X9GLMJ2"
     },
     "buildSettings": {
       "LD_RUNPATH_SEARCH_PATHS": "$(inherited)",
@@ -19,14 +19,15 @@
     },
     "entitlements": {
       "com.apple.security.application-groups": [
-        "$APPGROUP",
-        "$SHAREAPPGROUP"
+        "group.com.minelab.realm",
+        "group.com.minelab.realm-of-minelab.shareextension"
       ],
-      "aps-environment": "$APS_ENVIRONMENT",
+      "aps-environment": "developmen",
       "com.apple.developer.associated-domains": [],
       "keychain-access-groups": [
-        "$KEYCHAIN_ACCESSGROUP"
+        "QK8X9GLMJ2.com.minelab.realm-of-minelab"
       ]
     }
   }
 }
+
