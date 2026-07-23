@@ -61,7 +61,8 @@ SOFTWARE.
 
     <!-- Main plugin source files -->
     <source-file src="src/ios/OpenWithPlugin.m" />
-    <header-file src="src/ios/ShareViewController.h" />
+    <header-file src="src/ios/ShareExtension/ShareViewController.h" />
+    <source-file src="src/ios/ShareExtension/ShareViewController.m" />
 
     <!-- Info.plist -->
     <config-file target="*-Info.plist" parent="CFBundleURLTypes">
