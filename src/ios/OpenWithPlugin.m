@@ -73,7 +73,7 @@ static NSDictionary* launchOptions = nil;
 
     if (self.loggerCallback != nil) {
       CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:message];
-      pluginResult.keepCallback = [NSNumber  numberWithBool:YES];
+      pluginResult.keepCallback = [NSNumber  numberWithBool:@YES];
 
       [self.commandDelegate sendPluginResult:pluginResult callbackId:self.loggerCallback];
     }
@@ -126,7 +126,7 @@ static NSDictionary* launchOptions = nil;
   [self debug:[NSString stringWithFormat:@"[setLogger] %@", self.loggerCallback]];
 
   CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
-  pluginResult.keepCallback = [NSNumber numberWithBool:YES];
+  pluginResult.keepCallback = [NSNumber numberWithBool:@YES];
 
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
@@ -136,7 +136,7 @@ static NSDictionary* launchOptions = nil;
   [self debug:[NSString stringWithFormat:@"[setHandler] %@", self.handlerCallback]];
 
   CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
-  pluginResult.keepCallback = [NSNumber numberWithBool:YES];
+  pluginResult.keepCallback = [NSNumber numberWithBool:@YES];
 
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
@@ -175,7 +175,7 @@ static NSDictionary* launchOptions = nil;
     @"items": items
   }];
 
-  pluginResult.keepCallback = [NSNumber numberWithBool:YES];
+  pluginResult.keepCallback = [NSNumber numberWithBool:@YES];
   [self.commandDelegate sendPluginResult:pluginResult callbackId:self.handlerCallback];
 }
 
