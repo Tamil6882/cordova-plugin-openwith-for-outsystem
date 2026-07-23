@@ -91,26 +91,11 @@ SOFTWARE.
 
     <!-- Cordova hooks -->
     <hook type="before_plugin_install" src="hooks/npmInstall.js" />
-    <hook type="after_plugin_install" src="hooks/iosCopyShareExtension.js" />
-    <!-- IMPORTANT: iosAddTarget.js must run exactly once per build, and
-         only for cordova-plugin-openwith's own install.
-         Per the Apache Cordova Hooks Guide: "before_plugin_install,
-         after_plugin_install ... hooks will be fired exclusively for the
-         plugin being installed/uninstalled" - whereas after_plugin_add is a
-         project-wide hook that fires once for EVERY plugin added to the
-         project, regardless of which plugin declared it.
-         This plugin was previously bound to after_plugin_add, which is why
-         a real build log showed iosAddTarget.js firing again after every
-         subsequent plugin install (4 extra runs before x-socialsharing).
-         Since the file-adding calls are not naturally idempotent across
-         separate xcode.project() parses, each extra run appended duplicate
-         PBXBuildFile/PBXFileReference objects to project.pbxproj, which is
-         what eventually broke the PBX grammar a few plugins later, inside
-         es6-promise-plugin. Moving this to after_plugin_install (the same
-         hook type iosCopyShareExtension.js already correctly uses, and
-         which fired exactly once in that log) fixes this at the root,
-         instead of only relying on the hasFile() guards as a backstop. -->
+    <hook type="after_plugin_install" src="hooks/iosCopyShareExtension.js" />    
+    <!-- ⚠️ COMMENTED OUT: This hook breaks subsequent plugin installations
     <hook type="after_plugin_install" src="hooks/iosAddTarget.js" />
+    -->
+  
     <hook type="before_build" src="hooks/apply_build_json.js" />
     <!-- Dependencies -->
     <framework src="MobileCoreServices.framework" />
