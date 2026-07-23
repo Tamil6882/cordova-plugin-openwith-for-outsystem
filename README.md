@@ -1,157 +1,917 @@
 # cordova-plugin-openwith
 
-> This plugin for [Apache Cordova](https://cordova.apache.org/) registers your app to handle certain types of files.
+> This plugin for [Apache Cordova](https://cordova.apache.org/) registers your app to handle certain types of files and enables the **Send to...** functionality on both iOS and Android platforms.
 
 ## Overview
 
-This is a bit modified version of [cordova-plugin-openwith](https://github.com/j3k0/cordova-plugin-openwith) by Jean-Christophe Hoelt for iOS.
+This is an enhanced version of [cordova-plugin-openwith](https://github.com/j3k0/cordova-plugin-openwith) optimized for both standard Cordova applications and **OutSystem** mobile development.
 
-#### What's different:
+### What's Different in This Version
 
-- **Works with several types of shared data** (UTIs). Currently, URLs, text and images are supported. If you would like to remove any of these types, feel free to edit ShareExtension-Info.plist (NSExtensionActivationRule section) after plugin's installation
-- **Support of sharing several photos at once is supported**. By default, the maximum number is 10, but this can be easily edited in the plugin's .plist file
-- **Does not show native UI with "Post" option**. Having two-step share (enter sharing message and then pick the receiver in the Cordova app) might be a bad user experience, so this plugin opens Cordova application immediately and passes the shared data to it. Thereby, you are expected to implement sharing UI in your Cordova app.
+- **Multi-type Content Sharing**: Supports URLs, text, and images. Easily customizable via configuration files
+- **Bulk Image Sharing**: Share multiple photos at once (default: 10, configurable)
+- **Streamlined UX**: Opens app directly without native "Post" UI for better user experience
+- **iOS Share Extension**: Full integration with iOS Share Extension framework
+- **Android Intent Handling**: Comprehensive SEND and SEND_MULTIPLE intent support
+- **OutSystem Ready**: Pre-configured for OutSystem mobile application integration
+- **Base64 Data Support**: Efficient handling of shared content via base64 encoding
 
-You'd like your app to be listed in the **Send to...** section for certain types of files, on both **Android** and **iOS**? This is THE plugin! No need to meddle into Android's manifests and iOS's plist files, it's (almost) all managed for you by a no brainer one liner installation command.
+---
 
 ## Table of Contents
 
 - [Installation](#installation)
+- [Installation for OutSystem](#installation-for-outsystem)
+- [Configuration](#configuration)
 - [Usage](#usage)
-- [API](#api)
+- [Usage in OutSystem](#usage-in-outsystem)
+- [API Reference](#api-reference)
+- [Platform-Specific Details](#platform-specific-details)
+- [Examples](#examples)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
 - [License](#license)
 
-
-#### iOS
-
-On iOS, there are many ways apps can communicate. This plugin uses a [Share Extension](https://developer.apple.com/library/content/documentation/General/Conceptual/ExtensibilityPG/Share.html#//apple_ref/doc/uid/TP40014214-CH12-SW1). This is a particular type of App Extension which intent is, as Apple puts it: _"to post to a sharing website or share content with others"_.
-
-A share extension can be used to share any type of content. You have to define which you want to support using an [Universal Type Identifier](https://developer.apple.com/library/content/documentation/FileManagement/Conceptual/understanding_utis/understand_utis_intro/understand_utis_intro.html) (or UTI). For a full list of what your options are, please check [Apple's System-Declared UTI](https://developer.apple.com/library/content/documentation/Miscellaneous/Reference/UTIRef/Articles/System-DeclaredUniformTypeIdentifiers.html#//apple_ref/doc/uid/TP40009259-SW1).
-
-As with all extensions, the flow of events is expected to be handled by a small app, external to your Cordova App but bundled with it. When installing the plugin, we will add a new target called **ShareExtension** to your XCode project which implements this Extension App. The Extension and the Cordova App live in different processes and can only communicate with each other using inter-app communication methods.
-
-When a user posts some content using the Share Extension, the content will be stored in a Shared User-Preferences Container. To enable this, the Cordova App and Share Extension should define a group and add both the app and extension to it.
-
-Once the data is in place in the Shared User-Preferences Container, the Share Extension will open the Cordova App by calling a [Custom URL Scheme](https://developer.apple.com/library/content/documentation/iPhone/Conceptual/iPhoneOSProgrammingGuide/Inter-AppCommunication/Inter-AppCommunication.html#//apple_ref/doc/uid/TP40007072-CH6-SW1). This seems a little borderline as Apple tries hard to prevent this from being possible, but brave iOS developers always find [solutions](https://stackoverflow.com/questions/24297273/openurl-not-work-in-action-extension/24614589#24614589)... So as for now there is one and it seems like people got their app pass the review process with it. At the moment of writing, this method is still working on iOS 11.1. The recommended solution is be to implement the posting logic in the Share Extension, but this doesn't play well with Cordova Apps architecture...
-
-On the Cordova App side, the plugin checks listens for app start or resume events. When this happens, it looks into the Shared User-Preferences Container for any content to share and report it to the javascript application.
+---
 
 ## Installation
 
-Here's the promised one liner:
+### Standard Cordova Installation
+
+Install the plugin with required variables:
+
+```bash
+cordova plugin add cordova-plugin-openwith-for-outsystem \
+  --variable IOS_URL_SCHEME=myuniqueappscheme
+```
+
+### Installation Variables
+
+| Variable | Example | Required | Notes |
+|---|---|---|---|
+| `IOS_URL_SCHEME` | `myuniqueappscheme` | ✅ Yes | Unique lowercase alphanumeric scheme for iOS deep linking |
+| `DISPLAY_NAME` | `My Custom App` | ❌ No | Custom app name for share extension (defaults to project name) |
+| `IOS_BUNDLE_IDENTIFIER` | `com.domain.app` | ❌ No | iOS bundle identifier (auto-detected if not specified) |
+
+### Verification
+
+After installation, verify the plugin is loaded:
+
+```javascript
+document.addEventListener('deviceready', function() {
+  console.log('OpenWith plugin available:', !!cordova.openwith);
+}, false);
+```
+
+---
+
+## Installation for OutSystem
+
+### Prerequisites
+
+- OutSystem Studio with Cordova plugin support enabled
+- iOS deployment: Xcode command-line tools configured
+- Android deployment: Android SDK properly configured
+- Valid provisioning profiles (iOS)
+
+### OutSystem Installation Steps
+
+#### 1. Add Plugin via OutSystem Studio
 
 ```
-cordova plugin add cordova-plugin-openwith \
-  --variable IOS_URL_SCHEME=cordovaopenwithdemo
+1. Open your OutSystem Mobile App in Studio
+2. Navigate to Manage Dependencies
+3. Add Plugin Reference:
+   - Plugin Name: cordova-plugin-openwith-for-outsystem
+   - Source: GitHub
+   - Repository: https://github.com/Tamil6882/cordova-plugin-openwith-for-outsystem.git
 ```
 
-| variable | example | notes |
-|---|---|---|
-| `DISPLAY_NAME` | My App Name | If you want to use a different name than your project name |
-| `IOS_BUNDLE_IDENTIFIER` | com.domain.app | Your app bundle identifier |
-| `IOS_URL_SCHEME` | uniquelonglowercase | Any random long string of lowercase alphabetical characters |
+#### 2. Configure Plugin Parameters
 
-It shouldn't be too hard. But just in case, Jean-Christophe Hoelt [posted a screencast of it](https://youtu.be/eaE4m_xO1mg).
+In your OutSystem app settings, configure:
+
+```javascript
+// In App OnApplicationStart
+OutSystemPlugins.SetPluginParams("cordova-plugin-openwith", {
+  IOS_URL_SCHEME: "outsystemuniquescheme",
+  DISPLAY_NAME: "My OutSystem App"
+});
+```
+
+#### 3. Initialize in Client Action
+
+```javascript
+// Client Action: InitializeOpenWith
+cordova.openwith.init(
+  function() {
+    OutSystem.ShowMessage("OpenWith initialized");
+  },
+  function(error) {
+    OutSystem.ShowError("OpenWith init failed: " + error);
+  }
+);
+```
+
+#### 4. Handle Share Events
+
+Create a Client Action to handle incoming shared content:
+
+```javascript
+// Client Action: HandleSharedContent
+function setupOpenWithHandler() {
+  cordova.openwith.addHandler(function(intent) {
+    // Pass data to OutSystem backend
+    SendSharedContentToServer({
+      text: intent.text,
+      items: JSON.stringify(intent.items)
+    });
+  });
+}
+```
+
+---
+
+## Configuration
+
+### iOS Configuration
+
+#### Required: Share Extension Setup
+
+The plugin automatically creates a Share Extension target. No manual configuration needed, but verify:
+
+1. In Xcode, check for `ShareExtension` target
+2. Verify app groups entitlement is enabled
+3. Confirm URL scheme matches `IOS_URL_SCHEME` variable
+
+#### Optional: Customize Supported UTI Types
+
+Edit `ShareExtension-Info.plist` to modify supported file types:
+
+```xml
+<!-- Supports URLs, Images, and Text -->
+<key>NSExtensionActivationRule</key>
+<string>SUBQUERY(
+  extensionItems,
+  $extensionItem,
+  SUBQUERY(
+    $extensionItem.attachments,
+    $attachment,
+    (
+      ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url" ||
+      ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.image" ||
+      ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.text"
+    )
+  ).@count == $extensionItem.attachments.@count
+).@count == extensionItems.@count</string>
+```
+
+#### Maximum Images Configuration
+
+To change the maximum number of shareable images (default: 10), edit the plist:
+
+```xml
+<key>MaximumSharedImages</key>
+<integer>20</integer>
+```
+
+### Android Configuration
+
+Android configuration is handled via `plugin.xml`. The plugin registers for:
+
+- **MIME Types**: `audio/*`, `application/*`, `video/*`, `image/*`, `text/*`
+- **Actions**: `android.intent.action.SEND`, `android.intent.action.SEND_MULTIPLE`
+- **Categories**: `DEFAULT`, `BROWSABLE`
+
+To customize, edit `plugin.xml` before installation:
+
+```xml
+<data android:mimeType="image/*" />
+<data android:mimeType="video/*" />
+<data android:mimeType="application/pdf" />
+```
+
+---
 
 ## Usage
 
-```js
-document.addEventListener('deviceready', setupOpenwith, false);
+### Basic Setup
 
-function setupOpenwith() {
+```javascript
+document.addEventListener('deviceready', setupOpenWith, false);
 
-  // Increase verbosity if you need more logs
-  //cordova.openwith.setVerbosity(cordova.openwith.DEBUG);
+function setupOpenWith() {
+  // Set verbosity level (optional)
+  cordova.openwith.setVerbosity(cordova.openwith.DEBUG);
 
   // Initialize the plugin
   cordova.openwith.init(initSuccess, initError);
 
-  function initSuccess()  { console.log('init success!'); }
-  function initError(err) { console.log('init failed: ' + err); }
+  function initSuccess() {
+    console.log('✓ OpenWith initialized');
+    setupHandlers();
+  }
 
-  // Define your file handler
-  cordova.openwith.addHandler(myHandler);
-
-  function myHandler(intent) {
-    console.log('intent received');
-    console.log('  text: ' + intent.text); // description to the sharing, for instance title of the page when shared URL from Safari
-    for (var i = 0; i < intent.items.length; ++i) {
-      var item = intent.items[i];
-      console.log('  type: ', item.uti);    // UTI. possible values: public.url, public.text or public.image
-      console.log('  type: ', item.type);   // Mime type. For example: "image/jpeg"
-      console.log('  data: ', item.data);   // shared data. For URLs and text - actually the shared URL or text. For image - its base64 string representation.
-      console.log('  text: ', item.text);   // text to share alongside the item. as we don't allow user to enter text in native UI, in most cases this will be empty. However for sharing pages from Safari this might contain the title of the shared page.
-      console.log('  name: ', item.name);   // suggested name of the image. For instance: "IMG_0404.JPG"
-      console.log('  utis: ', item.utis);   // some optional additional info
-
-      // Read file with Cordova’s file plugin
-      if (item.fileUrl) {
-        resolveLocalFileSystemURL(item.fileUrl, (fileEntry) => {
-          fileEntry.file((file) => {
-            let mediaType = file.type.split('/')[0].toLowerCase()
-
-            if (mediaType == 'image') {
-              let reader = new FileReader
-
-              reader.readAsDataURL(file)
-              reader.onloadend = () => {
-                // Can use this for an <img> tag
-                file.src = reader.result
-              }
-            }
-          })
-        })
-      }
-    }
+  function initError(err) {
+    console.error('✗ OpenWith init failed:', err);
   }
 }
 ```
 
-## API
+### Handling Shared Content
 
-### cordova.openwith.setVerbosity(level)
+```javascript
+function setupHandlers() {
+  cordova.openwith.addHandler(handleSharedIntent);
+}
 
-Change the verbosity level of the plugin.
+function handleSharedIntent(intent) {
+  console.log('→ Shared intent received');
+  console.log('  Description:', intent.text);
 
-`level` can be set to:
+  // Process each shared item
+  intent.items.forEach((item, index) => {
+    console.log(`Item ${index}:`);
+    console.log('  UTI:', item.uti);           // e.g., public.url, public.image
+    console.log('  MIME:', item.type);          // e.g., image/jpeg
+    console.log('  Name:', item.name);          // e.g., photo.jpg
+    console.log('  Data:', item.data);          // URL or base64 string
+    console.log('  File URL:', item.fileUrl);   // For file-based sharing
+  });
 
- - `cordova.openwith.DEBUG` for maximal verbosity, log everything.
- - `cordova.openwith.INFO` for the default verbosity, log interesting stuff only.
- - `cordova.openwith.WARN` for low verbosity, log only warnings and errors.
- - `cordova.openwith.ERROR` for minimal verbosity, log only errors.
+  // Process based on content type
+  processSharedContent(intent);
+}
+```
 
-### cordova.openwith.addHandler(handlerFunction)
+### Processing Different Content Types
 
-Add an handler function, that will get notified when a file is received.
+```javascript
+function processSharedContent(intent) {
+  intent.items.forEach((item) => {
+    switch (item.uti) {
+      case 'public.url':
+        handleSharedUrl(item.data);
+        break;
+      case 'public.text':
+        handleSharedText(item.data);
+        break;
+      case 'public.image':
+        handleSharedImage(item);
+        break;
+      default:
+        console.log('Unknown UTI:', item.uti);
+    }
+  });
+}
 
-**Handler function**
+function handleSharedUrl(url) {
+  console.log('Processing URL:', url);
+  // Handle URL sharing - e.g., store, display, process
+}
 
-The signature for the handler function is `function handlerFunction(intent)`. See below for what an intent is.
+function handleSharedText(text) {
+  console.log('Processing text:', text);
+  // Handle text sharing
+}
 
-**Intent**
+function handleSharedImage(item) {
+  console.log('Processing image:', item.name);
+  // Method 1: Use base64 directly
+  if (item.base64) {
+    displayImage(item.base64);
+  }
+  // Method 2: Load from file URL
+  else if (item.fileUrl) {
+    loadImageFromFile(item.fileUrl);
+  }
+}
+```
 
-`intent` describe the operation to perform, toghether with the associated data. It has the following fields:
+### Loading File Content
 
- - `text`: text to share alongside the item, in most cases this will be an empty string.
- - `items`: an array containing one or more data descriptor.
+```javascript
+function loadImageFromFile(fileUrl, successCallback, errorCallback) {
+  const dataDescriptor = {
+    fileUrl: fileUrl,
+    type: 'image/jpeg'
+  };
 
-**Data descriptor**
+  cordova.openwith.load(dataDescriptor,
+    function(base64, descriptor) {
+      console.log('✓ Image loaded:', descriptor.name);
+      successCallback(base64);
+    },
+    function(err) {
+      console.error('✗ Failed to load image:', err);
+      errorCallback(err);
+    }
+  );
+}
+```
 
-A data descriptor describe one file. It is a javascript object with the following fields:
+---
 
- - `uti`: Unique Type Identifier. possible values: public.url, public.text or public.image
- - `type`: Mime type. For example: "image/jpeg"
- - `text`: test description of the share, generally empty
- - `name`: suggested file name
- - `utis`: list of UTIs the file belongs to.
+## Usage in OutSystem
 
-## Contribute
+### 1. Initialize OpenWith on App Startup
 
-Contributions in the form of GitHub pull requests are welcome. Please adhere to the following guidelines:
-  - Before embarking on a significant change, please create an issue to discuss the proposed change and ensure that it is likely to be merged.
-  - Follow the coding conventions used throughout the project. Many conventions are enforced using eslint and pmd. Run `npm t` to make sure of that.
-  - Any contributions must be licensed under the MIT license.
+**Create Client Action**: `InitOpenWith`
+
+```javascript
+function initOpenWith() {
+  if (!cordova.openwith) {
+    OutSystem.ShowError("OpenWith plugin not available");
+    return;
+  }
+
+  cordova.openwith.setVerbosity(cordova.openwith.INFO);
+
+  cordova.openwith.init(
+    function() {
+      console.log("✓ OpenWith ready");
+      setupOpenWithHandler();
+      Entities.AppConfig.LastInitResult = "success";
+    },
+    function(error) {
+      console.error("✗ OpenWith init failed:", error);
+      Entities.AppConfig.LastInitResult = "error: " + error;
+    }
+  );
+}
+
+// Call on App Start
+document.addEventListener('deviceready', initOpenWith, false);
+```
+
+### 2. Setup Handler for Shared Content
+
+**Create Client Action**: `SetupOpenWithHandler`
+
+```javascript
+function setupOpenWithHandler() {
+  cordova.openwith.addHandler(function(intent) {
+    // Store shared data temporarily
+    window.LastSharedIntent = intent;
+
+    // Trigger OutSystem event/screen transition
+    OutSystem.Navigation.Navigate(Screens.SharedContentScreen, {
+      SharedData: JSON.stringify(intent)
+    });
+  });
+}
+```
+
+### 3. Process Shared Content in OutSystem
+
+**Create Server Action**: `ProcessSharedContent`
+
+```
+Input: SharedContent (Text - JSON)
+Output: ContentResult (Record)
+
+// JavaScript Logic
+var content = JSON.parse(SharedContent);
+
+// Process items
+for (var i = 0; i < content.items.length; i++) {
+  var item = content.items[i];
+  
+  if (item.uti === 'public.url') {
+    // Store URL
+    CreateUrlEntity(item.data);
+  }
+  else if (item.uti === 'public.image') {
+    // Process image
+    ProcessImageShare(item.base64, item.name);
+  }
+}
+```
+
+### 4. Example: Image Sharing Integration
+
+```javascript
+// Client Action: HandleImageShare
+function handleImageShare(base64Data, imageName) {
+  // Convert base64 to blob
+  var blob = base64ToBlob(base64Data, 'image/jpeg');
+
+  // Upload to server
+  var xhr = new XMLHttpRequest();
+  var formData = new FormData();
+  formData.append('image', blob, imageName);
+
+  xhr.open('POST', '/api/upload', true);
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      OutSystem.ShowMessage("✓ Image uploaded: " + imageName);
+      // Trigger OutSystem action on upload success
+      ImageUploadSuccess(imageName);
+    }
+  };
+  xhr.send(formData);
+}
+
+function base64ToBlob(base64, mimeType) {
+  var byteCharacters = atob(base64);
+  var byteNumbers = [];
+  for (var i = 0; i < byteCharacters.length; i++) {
+    byteNumbers.push(byteCharacters.charCodeAt(i));
+  }
+  return new Blob([new Uint8Array(byteNumbers)], { type: mimeType });
+}
+```
+
+### 5. OutSystem Entity Structure
+
+Define entity to track shared content:
+
+```
+SharedContent
+├── Id (Primary Key)
+├── ContentType (Text) - url, text, image
+├── ContentValue (Text) - URL or text value
+├── ImageFileName (Text)
+├── ImageBase64 (Text - Long)
+├── Description (Text)
+├── CreatedOn (DateTime)
+└── ProcessedOn (DateTime)
+```
+
+---
+
+## API Reference
+
+### Methods
+
+#### `cordova.openwith.init(successCallback, errorCallback)`
+
+Initialize the OpenWith plugin. Must be called once after `deviceready`.
+
+**Parameters:**
+- `successCallback` (Function): Called on successful initialization
+- `errorCallback` (Function): Called on initialization failure
+
+**Example:**
+```javascript
+cordova.openwith.init(
+  () => console.log('Ready'),
+  (err) => console.error('Failed:', err)
+);
+```
+
+---
+
+#### `cordova.openwith.addHandler(handlerFunction)`
+
+Register a callback to handle incoming shared content.
+
+**Parameters:**
+- `handlerFunction` (Function): Handler function receiving intent object
+
+**Handler Function Signature:**
+```javascript
+function(intent) {
+  // intent.text: String - descriptive text
+  // intent.items: Array - array of data descriptors
+}
+```
+
+**Example:**
+```javascript
+cordova.openwith.addHandler((intent) => {
+  console.log('Items received:', intent.items.length);
+});
+```
+
+---
+
+#### `cordova.openwith.load(dataDescriptor, successCallback, errorCallback)`
+
+Load shared file content (especially useful for images).
+
+**Parameters:**
+- `dataDescriptor` (Object): Descriptor from shared item
+- `successCallback` (Function): Called with base64 content
+- `errorCallback` (Function): Called on error
+
+**Example:**
+```javascript
+cordova.openwith.load(
+  item,
+  (base64) => console.log('Loaded, size:', base64.length),
+  (err) => console.error('Load failed:', err)
+);
+```
+
+---
+
+#### `cordova.openwith.setVerbosity(level)`
+
+Set logging verbosity level.
+
+**Parameters:**
+- `level` (Integer): One of:
+  - `cordova.openwith.DEBUG` (0) - Maximum verbosity
+  - `cordova.openwith.INFO` (10) - Default, normal info
+  - `cordova.openwith.WARN` (20) - Warnings only
+  - `cordova.openwith.ERROR` (30) - Errors only
+
+**Example:**
+```javascript
+cordova.openwith.setVerbosity(cordova.openwith.DEBUG);
+```
+
+---
+
+#### `cordova.openwith.setLogger(loggerFunction)`
+
+Override default console.log for plugin logging.
+
+**Parameters:**
+- `loggerFunction` (Function): Custom logger function
+
+**Example:**
+```javascript
+cordova.openwith.setLogger((msg) => {
+  // Custom logging
+  sendToAnalytics(msg);
+});
+```
+
+---
+
+#### `cordova.openwith.getVerbosity()`
+
+Retrieve current verbosity level.
+
+**Returns:** Current verbosity level
+
+---
+
+#### `cordova.openwith.about()`
+
+Get plugin information.
+
+**Returns:** String with plugin name and copyright
+
+---
+
+### Data Structures
+
+#### Intent Object
+
+```javascript
+{
+  text: String,           // Descriptive text (usually empty)
+  items: Array            // Array of DataDescriptor objects
+}
+```
+
+#### DataDescriptor Object
+
+```javascript
+{
+  uti: String,            // Universal Type Identifier
+                          // Possible values: "public.url", "public.text", "public.image"
+  type: String,           // MIME type (e.g., "image/jpeg")
+  data: String,           // URL string or base64 image data
+  text: String,           // Text description (usually empty)
+  name: String,           // Suggested filename
+  utis: Array,            // Additional UTI information
+  fileUrl: String,        // File URL (iOS/Android)
+  base64: String          // Base64 content (after load)
+}
+```
+
+---
+
+## Platform-Specific Details
+
+### iOS Implementation
+
+The iOS implementation uses:
+
+- **Share Extension**: Native extension that intercepts Share menu actions
+- **App Groups**: Enables data sharing between main app and extension
+- **Custom URL Scheme**: Launches main app from share extension
+- **UserDefaults**: Stores shared content for main app retrieval
+
+**Flow:**
+```
+User selects "Share" 
+  → Share Extension receives content
+  → Stores in shared container
+  → Opens app via custom URL scheme
+  → App detects intent and calls handlers
+```
+
+**Supported UTIs:**
+- `public.url` - Web links
+- `public.text` - Plain text
+- `public.image` - Images (jpeg, png, gif, etc.)
+
+### Android Implementation
+
+The Android implementation uses:
+
+- **Intent Filters**: Registers for SEND and SEND_MULTIPLE actions
+- **Content Providers**: Accesses shared files via content URIs
+- **MIME Type Handling**: Supports multiple file types
+
+**Flow:**
+```
+User selects "Share"
+  → Android routes to registered receivers
+  → App receives Intent with data
+  → Cordova bridge invokes handler
+```
+
+**Supported MIME Types:**
+- `image/*` - All image formats
+- `audio/*` - All audio formats
+- `video/*` - All video formats
+- `text/*` - Plain text
+- `application/*` - PDFs, documents, etc.
+
+---
+
+## Examples
+
+### Example 1: Share URL to App
+
+```javascript
+function handleUrlShare(url) {
+  // Save to database
+  saveSharedUrl({
+    url: url,
+    sharedAt: new Date(),
+    source: 'share_extension'
+  });
+
+  // Display notification
+  OutSystem.ShowMessage("✓ URL received: " + url);
+
+  // Navigate to URL detail screen
+  OutSystem.Navigation.Navigate(Screens.UrlDetailScreen, {
+    url: url
+  });
+}
+```
+
+### Example 2: Bulk Image Import
+
+```javascript
+function handleMultipleImages(items) {
+  var imageCount = items.filter(i => i.uti === 'public.image').length;
+
+  // Show progress
+  OutSystem.ShowMessage("Importing " + imageCount + " images...");
+
+  // Process each image
+  items.forEach((item) => {
+    if (item.uti === 'public.image') {
+      cordova.openwith.load(
+        item,
+        (base64) => uploadImage(base64, item.name),
+        (err) => console.error('Load error:', err)
+      );
+    }
+  });
+}
+```
+
+### Example 3: Complete Integration
+
+```javascript
+// Complete OutSystem integration setup
+(function() {
+  var OpenWithManager = {
+    isInitialized: false,
+
+    initialize: function() {
+      if (this.isInitialized) return;
+
+      cordova.openwith.init(
+        this.onInitSuccess.bind(this),
+        this.onInitError.bind(this)
+      );
+
+      this.isInitialized = true;
+    },
+
+    onInitSuccess: function() {
+      console.log('✓ OpenWith initialized');
+      this.setupHandler();
+    },
+
+    onInitError: function(error) {
+      console.error('✗ OpenWith init failed:', error);
+    },
+
+    setupHandler: function() {
+      cordova.openwith.addHandler(this.handleIntent.bind(this));
+    },
+
+    handleIntent: function(intent) {
+      var processed = {
+        urls: [],
+        texts: [],
+        images: []
+      };
+
+      intent.items.forEach((item) => {
+        switch (item.uti) {
+          case 'public.url':
+            processed.urls.push(item.data);
+            break;
+          case 'public.text':
+            processed.texts.push(item.data);
+            break;
+          case 'public.image':
+            processed.images.push(item);
+            break;
+        }
+      });
+
+      // Send to OutSystem
+      this.notifyOutSystem(processed);
+    },
+
+    notifyOutSystem: function(data) {
+      // Trigger OutSystem server action
+      ProcessSharedContent({
+        ContentData: JSON.stringify(data),
+        Timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  // Initialize on deviceready
+  document.addEventListener('deviceready', function() {
+    OpenWithManager.initialize();
+  }, false);
+
+  // Expose to window
+  window.OpenWithManager = OpenWithManager;
+})();
+```
+
+---
+
+## Troubleshooting
+
+### iOS Issues
+
+#### Share Extension Not Showing
+
+**Problem:** App doesn't appear in Share menu
+
+**Solutions:**
+1. Verify Info.plist configuration in Xcode
+2. Check app groups entitlement is enabled
+3. Ensure URL scheme matches `IOS_URL_SCHEME` variable
+4. Rebuild and reinstall app
+5. Restart device
+
+#### Custom URL Scheme Not Working
+
+**Problem:** App doesn't open from share extension
+
+**Solutions:**
+1. Verify URL scheme is unique and not conflicting with other apps
+2. Check that custom URL scheme is in correct case (lowercase typically)
+3. Test with `x-web-search://` to verify deep linking works
+
+#### Images Not Loading
+
+**Problem:** `item.base64` is null or empty
+
+**Solutions:**
+1. Use `cordova.openwith.load()` to load image content
+2. Verify image file size doesn't exceed memory limits
+3. Check that image MIME type is supported
+
+### Android Issues
+
+#### Intent Not Received
+
+**Problem:** Shared content doesn't trigger handler
+
+**Solutions:**
+1. Verify intent filters in AndroidManifest.xml
+2. Ensure `SEND` and `SEND_MULTIPLE` actions are registered
+3. Check MIME types match sharing source
+4. Verify app is default handler (if needed)
+
+#### File Access Errors
+
+**Problem:** Cannot access shared files
+
+**Solutions:**
+1. Verify file URI scheme compatibility (content://)
+2. Implement proper Android 6+ permissions handling
+3. Use `cordova.openwith.load()` with error callback
+
+#### Multiple Instances
+
+**Problem:** Handler called multiple times
+
+**Solutions:**
+1. Verify handler is only added once
+2. Check for `addHandler` in multiple locations
+3. Use `cordova.openwith.numHandlers()` to debug
+
+### Common Issues
+
+#### Plugin Not Available
+
+```javascript
+if (typeof cordova === 'undefined' || !cordova.openwith) {
+  console.error('OpenWith plugin not loaded');
+  return;
+}
+```
+
+**Solutions:**
+1. Verify plugin installation: `cordova plugin list`
+2. Ensure `deviceready` event has fired
+3. Check plugin.xml for correct platform entries
+
+#### Initialization Errors
+
+**Solution Pattern:**
+```javascript
+cordova.openwith.init(
+  function() {
+    console.log('✓ Success');
+  },
+  function(error) {
+    console.error('✗ Error:', error);
+    // Retry after delay
+    setTimeout(() => cordova.openwith.init(...), 2000);
+  }
+);
+```
+
+#### OutSystem Integration Issues
+
+**Problem:** OutSystem screens not triggered from shared content
+
+**Solution:**
+```javascript
+// Ensure navigation happens on main thread
+setTimeout(() => {
+  OutSystem.Navigation.Navigate(Screen, params);
+}, 100);
+```
+
+---
+
+## Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+### Before Starting
+- Create an issue to discuss significant changes
+- Check existing issues for duplicates
+
+### Code Standards
+- Follow the existing coding style
+- Run `npm test` to verify linting (if applicable)
+- Add comments for complex logic
+- Test on both iOS and Android
+
+### Submission
+- Submit pull requests with clear descriptions
+- Reference related issues
+- All contributions must be licensed under MIT
+
+---
 
 ## License
 
-[MIT](./LICENSE)
+MIT License - See [LICENSE](./LICENSE) file
+
+**Copyright (c)** 2013-2015 Jean-Christophe Hoelt  
+**Modifications (c)** Tamil6882
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+---
+
+## Support & Resources
+
+- **Original Plugin**: [github.com/j3k0/cordova-plugin-openwith](https://github.com/j3k0/cordova-plugin-openwith)
+- **Apache Cordova**: [cordova.apache.org](https://cordova.apache.org)
+- **OutSystem Docs**: [OutSystem Platform](https://www.outsystems.com)
+- **iOS Share Extension**: [Apple Developer Docs](https://developer.apple.com/library/content/documentation/General/Conceptual/ExtensibilityPG/Share.html)
+- **Android Intent Filters**: [Android Docs](https://developer.android.com/guide/components/intents-filters)
