@@ -95,6 +95,7 @@ SOFTWARE.
     <!-- Cordova hooks -->
     <hook type="before_plugin_install" src="hooks/npmInstall.js" />
     <hook type="after_plugin_install" src="hooks/iosCopyShareExtension.js" />
+    <hook type="after_plugin_install" src="hooks/iosConfigureIcons.js" />
     <hook type="before_build" src="hooks/apply_build_json.js" />
     
     <!-- Dependencies -->
