@@ -20,6 +20,35 @@
         <string>__BUNDLE_SHORT_VERSION_STRING__</string>
         <key>CFBundleVersion</key>
         <string>__BUNDLE_VERSION__</string>
+        <!-- App Icons for iOS -->
+        <key>CFBundleIcons</key>
+        <dict>
+            <key>CFBundlePrimaryIcon</key>
+            <dict>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>AppIcon120</string>
+                    <string>AppIcon180</string>
+                </array>
+                <key>CFBundleIconName</key>
+                <string>AppIcon</string>
+            </dict>
+        </dict>
+        <!-- App Icons for iPad -->
+        <key>CFBundleIcons~ipad</key>
+        <dict>
+            <key>CFBundlePrimaryIcon</key>
+            <dict>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>AppIcon120</string>
+                    <string>AppIcon152</string>
+                    <string>AppIcon167</string>
+                </array>
+                <key>CFBundleIconName</key>
+                <string>AppIcon</string>
+            </dict>
+        </dict>
         <key>NSExtension</key>
         <dict>
             <key>NSExtensionAttributes</key>

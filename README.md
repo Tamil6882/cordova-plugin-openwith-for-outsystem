@@ -15,6 +15,7 @@ This is an enhanced version of [cordova-plugin-openwith](https://github.com/j3k0
 - **Android Intent Handling**: Comprehensive SEND and SEND_MULTIPLE intent support
 - **OutSystem Ready**: Pre-configured for OutSystem mobile application integration
 - **Base64 Data Support**: Efficient handling of shared content via base64 encoding
+- **Automatic Icon Configuration**: App icons automatically configured for share menu display
 
 ---
 
@@ -762,6 +763,38 @@ function handleMultipleImages(items) {
 ## Troubleshooting
 
 ### iOS Issues
+
+#### Share Extension Icon Not Appearing
+
+**Problem:** App icon doesn't show in the iOS share menu
+
+**Root Cause:** The ShareExtension target's icon configuration is not synchronized with the main app.
+
+**Solutions:**
+
+1. **Automatic Configuration (Recommended)**
+   - The plugin automatically configures icons during installation
+   - If icons still don't appear, ensure your main app has icon assets defined
+   - Rebuild the project: `cordova build ios`
+
+2. **Manual Configuration in Xcode**
+   - Open your project in Xcode
+   - Select the **ShareExt** target
+   - Go to **Build Settings** → search for "Icon"
+   - Ensure `ASSETCATALOG_COMPILER_APPICON_NAME` matches the main target
+   - Verify icons are in **Assets.xcassets** with proper sizes:
+     - iPhone: 120x120 (@2x), 180x180 (@3x)
+     - iPad: 152x152 (@2x), 167x167 (@2x)
+
+3. **Verify CFBundleIcons in Info.plist**
+   - Check that `ShareExtension-Info.plist` contains `CFBundleIcons` configuration
+   - This is added automatically by the plugin
+
+4. **Last Resort**
+   - Clean build folder: `Cmd+Shift+K`
+   - Delete Xcode derived data: `~/Library/Developer/Xcode/DerivedData`
+   - Rebuild project
+   - Reinstall app on device
 
 #### Share Extension Not Showing
 
